@@ -1,6 +1,5 @@
 import {
   IsInt,
-  IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
@@ -8,42 +7,42 @@ import {
   Min,
 } from 'class-validator';
 
-export class CreateTaskDto {
+export class UpdateTaskDto {
+  @IsOptional()
   @IsString({ message: 'Tieu de task phai la chuoi' })
-  @IsNotEmpty({ message: 'Tieu de task khong duoc de trong' })
   @MaxLength(255, { message: 'Tieu de task toi da 255 ky tu' })
-  title: string;
+  title?: string;
 
   @IsOptional()
   @IsString({ message: 'Mo ta phai la chuoi' })
   description?: string;
 
+  @IsOptional()
   @IsUUID('4', { message: 'taskTypeId khong hop le' })
-  @IsNotEmpty({ message: 'taskTypeId khong duoc de trong' })
-  taskTypeId: string;
+  taskTypeId?: string;
 
+  @IsOptional()
   @IsUUID('4', { message: 'statusId khong hop le' })
-  @IsNotEmpty({ message: 'statusId khong duoc de trong' })
-  statusId: string;
+  statusId?: string;
 
+  @IsOptional()
   @IsUUID('4', { message: 'priorityId khong hop le' })
-  @IsNotEmpty({ message: 'priorityId khong duoc de trong' })
-  priorityId: string;
+  priorityId?: string;
 
   @IsOptional()
   @IsUUID('4', { message: 'assigneeUserId khong hop le' })
-  assigneeUserId?: string;
+  assigneeUserId?: string | null;
 
   @IsOptional()
   @IsUUID('4', { message: 'parentTaskId khong hop le' })
-  parentTaskId?: string;
+  parentTaskId?: string | null;
 
   @IsOptional()
   @IsString({ message: 'dueDate phai la chuoi ngay hop le' })
-  dueDate?: string;
+  dueDate?: string | null;
 
   @IsOptional()
   @IsInt({ message: 'estimatedHours phai la so nguyen' })
   @Min(0, { message: 'estimatedHours phai lon hon hoac bang 0' })
-  estimatedHours?: number;
+  estimatedHours?: number | null;
 }

@@ -233,6 +233,73 @@ export const APP_ERROR_DEFINITIONS = {
       message: 'Khong the xoa thanh vien khoi project',
     },
   },
+  task: {
+    taskNotFound: {
+      statusCode: HttpStatus.NOT_FOUND,
+      error: 'TASK_NOT_FOUND',
+      message: 'Task khong ton tai',
+    },
+    taskTypeNotFound: {
+      statusCode: HttpStatus.NOT_FOUND,
+      error: 'TASK_TYPE_NOT_FOUND',
+      message: 'Loai task khong ton tai',
+    },
+    taskStatusNotFound: {
+      statusCode: HttpStatus.NOT_FOUND,
+      error: 'TASK_STATUS_NOT_FOUND',
+      message: 'Trang thai task khong ton tai',
+    },
+    priorityNotFound: {
+      statusCode: HttpStatus.NOT_FOUND,
+      error: 'TASK_PRIORITY_NOT_FOUND',
+      message: 'Do uu tien khong ton tai',
+    },
+    assigneeNotFound: {
+      statusCode: HttpStatus.NOT_FOUND,
+      error: 'TASK_ASSIGNEE_NOT_FOUND',
+      message: 'Nguoi duoc giao task khong ton tai',
+    },
+    assigneeNotInProject: {
+      statusCode: HttpStatus.BAD_REQUEST,
+      error: 'TASK_ASSIGNEE_NOT_IN_PROJECT',
+      message: 'Nguoi duoc giao khong thuoc project nay',
+    },
+    parentTaskNotFound: {
+      statusCode: HttpStatus.NOT_FOUND,
+      error: 'PARENT_TASK_NOT_FOUND',
+      message: 'Task cha khong ton tai',
+    },
+    parentTaskDifferentProject: {
+      statusCode: HttpStatus.BAD_REQUEST,
+      error: 'PARENT_TASK_DIFFERENT_PROJECT',
+      message: 'Task cha khong thuoc cung project',
+    },
+    invalidParentTask: {
+      statusCode: HttpStatus.BAD_REQUEST,
+      error: 'INVALID_PARENT_TASK',
+      message: 'Task khong the la cha cua chinh no',
+    },
+    taskCreationFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'TASK_CREATION_FAILED',
+      message: 'Khong the tao task',
+    },
+    taskUpdateFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'TASK_UPDATE_FAILED',
+      message: 'Khong the cap nhat task',
+    },
+    taskDeleteFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'TASK_DELETE_FAILED',
+      message: 'Khong the xoa task',
+    },
+    taskUpdatePayloadEmpty: {
+      statusCode: HttpStatus.BAD_REQUEST,
+      error: 'TASK_UPDATE_PAYLOAD_EMPTY',
+      message: 'Khong co du lieu hop le de cap nhat task',
+    },
+  },
 } as const satisfies Record<string, Record<string, AppErrorDefinition>>;
 
 export class AppException extends HttpException {
@@ -331,6 +398,23 @@ export const AppErrors = {
       new AppException(APP_ERROR_DEFINITIONS.project.memberRoleUpdateFailed),
     memberDeletionFailed: () =>
       new AppException(APP_ERROR_DEFINITIONS.project.memberDeletionFailed),
+  },
+  task: {
+    taskNotFound: () => new AppException(APP_ERROR_DEFINITIONS.task.taskNotFound),
+    taskTypeNotFound: () => new AppException(APP_ERROR_DEFINITIONS.task.taskTypeNotFound),
+    taskStatusNotFound: () => new AppException(APP_ERROR_DEFINITIONS.task.taskStatusNotFound),
+    priorityNotFound: () => new AppException(APP_ERROR_DEFINITIONS.task.priorityNotFound),
+    assigneeNotFound: () => new AppException(APP_ERROR_DEFINITIONS.task.assigneeNotFound),
+    assigneeNotInProject: () => new AppException(APP_ERROR_DEFINITIONS.task.assigneeNotInProject),
+    parentTaskNotFound: () => new AppException(APP_ERROR_DEFINITIONS.task.parentTaskNotFound),
+    parentTaskDifferentProject: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.parentTaskDifferentProject),
+    invalidParentTask: () => new AppException(APP_ERROR_DEFINITIONS.task.invalidParentTask),
+    taskCreationFailed: () => new AppException(APP_ERROR_DEFINITIONS.task.taskCreationFailed),
+    taskUpdateFailed: () => new AppException(APP_ERROR_DEFINITIONS.task.taskUpdateFailed),
+    taskDeleteFailed: () => new AppException(APP_ERROR_DEFINITIONS.task.taskDeleteFailed),
+    taskUpdatePayloadEmpty: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.taskUpdatePayloadEmpty),
   },
 } as const;
 

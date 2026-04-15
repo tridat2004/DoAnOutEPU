@@ -4,6 +4,7 @@ import { createDatabaseOptions } from './database/database.config';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ProjectsModule } from './modules/projects/projects.module';
+import { TasksModule } from './modules/tasks/tasks.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ProjectsModule } from './modules/projects/projects.module';
     UsersModule,
     AuthModule,
     ProjectsModule,
+    TasksModule,
   ],
 })
 export class AppModule {}

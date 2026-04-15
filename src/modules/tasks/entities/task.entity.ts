@@ -30,7 +30,7 @@ export class Task extends BaseEntity {
   title!: string;
 
   @Column({ type: 'text', nullable: true })
-  description?: string;
+  description!: string | null;
 
   @ManyToOne(() => TaskType, (taskType) => taskType.tasks, {
     nullable: false,
@@ -65,21 +65,21 @@ export class Task extends BaseEntity {
     onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'assignee_user_id' })
-  assignee?: User;
+  assignee!: User | null;
 
   @ManyToOne(() => Task, (task) => task.children, {
     nullable: true,
     onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'parent_task_id' })
-  parentTask?: Task;
+  parentTask!: Task | null;
 
   @OneToMany(() => Task, (task) => task.parentTask)
   children!: Task[];
 
   @Column({ name: 'due_date', type: 'date', nullable: true })
-  dueDate?: string;
+  dueDate!: string | null;
 
   @Column({ name: 'estimated_hours', type: 'int', nullable: true })
-  estimatedHours?: number;
+  estimatedHours!: number | null;
 }

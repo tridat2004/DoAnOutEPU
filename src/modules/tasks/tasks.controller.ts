@@ -1,21 +1,71 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ApiCookieAuth, ApiTags } from '@nestjs/swagger';
-import { CreateTaskDto } from './dto/create-task.dto';
-import { TasksService } from './tasks.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 
-@ApiTags('tasks')
-@ApiCookieAuth('access_token')
-@Controller('tasks')
+import { TasksService } from './tasks.service';
+import { CreateTaskDto } from './dto/create-task.dto';
+import { UpdateTaskDto } from './dto/update-task.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
+import { RequireProjectPermissions } from '../auth/decorators/project-permissions.decorator';
+
+@Controller('projects/:projectId/tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
-  @Get()
-  findAll() {
-    return this.tasksService.findAll();
+  @RequireProjectPermissions('task.create')
+  @Post()
+  createTask(
+    @Param('projectId') projectId: string,
+    @Body() dto: CreateTaskDto,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    return this.tasksService.createTask(projectId, dto, currentUser);
   }
 
-  @Post()
-  create(@Body() body: CreateTaskDto) {
-    return this.tasksService.create(body);
+  @RequireProjectPermissions('task.view')
+  @Get()
+  getTasks(
+    @Param('projectId') projectId: string,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    return this.tasksService.getTasks(projectId, currentUser);
+  }
+
+  @RequireProjectPermissions('task.view')
+  @Get(':taskId')
+  getTaskDetail(
+    @Param('projectId') projectId: string,
+    @Param('taskId') taskId: string,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    return this.tasksService.getTaskDetails(projectId, taskId, currentUser);
+  }
+
+  @RequireProjectPermissions('task.update')
+  @Patch(':taskId')
+  updateTask(
+    @Param('projectId') projectId: string,
+    @Param('taskId') taskId: string,
+    @Body() dto: UpdateTaskDto,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    return this.tasksService.updateTask(projectId, taskId, dto, currentUser);
+  }
+
+  @RequireProjectPermissions('task.update')
+  @Delete(':taskId')
+  deleteTask(
+    @Param('projectId') projectId: string,
+    @Param('taskId') taskId: string,
+    @CurrentUser() currentUser: AuthenticatedUser,
+  ) {
+    return this.tasksService.deleteTask(projectId, taskId, currentUser);
   }
 }
