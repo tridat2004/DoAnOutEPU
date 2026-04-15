@@ -12,7 +12,8 @@ import { TaskType } from './task-type.entity';
 import { TaskStatus } from './task-status.entity';
 import { Priority } from './priority.entity';
 import { User } from '../../users/entities/user.entity';
-
+import { TaskComment } from './task-comment.entity';
+import { TaskHistory } from './task-history.entity';
 @Entity('tasks')
 export class Task extends BaseEntity {
   @ManyToOne(() => Project, (project) => project.tasks, {
@@ -82,4 +83,10 @@ export class Task extends BaseEntity {
 
   @Column({ name: 'estimated_hours', type: 'int', nullable: true })
   estimatedHours!: number | null;
+
+  @OneToMany(() => TaskComment, (comment) => comment.task)
+  comments!: TaskComment[];
+
+  @OneToMany(() => TaskHistory, (history) => history.task)
+  histories!: TaskHistory[];
 }

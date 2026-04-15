@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Not, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 import { Task } from './entities/task.entity';
 import { TaskType } from './entities/task-type.entity';
@@ -9,7 +9,7 @@ import { Priority } from './entities/priority.entity';
 import { Project } from '../projects/entities/project.entity';
 import { ProjectMember } from '../projects/entities/project-member.entity';
 import { User } from '../users/entities/user.entity';
-
+import { TaskHistoriesService } from './task-histories.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
@@ -41,6 +41,8 @@ export class TasksService {
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    private readonly taskHistoriesService: TaskHistoriesService,
   ) {}
 
   async getTaskTypes(){
@@ -171,14 +173,28 @@ export class TasksService {
     })
   }
 
-  async updateTask(projectId: string, taskId: string, dto: UpdateTaskDto, currentUser: AuthenticatedUser){
+  async updateTask(
+    projectId: string,
+    taskId: string,
+    dto: UpdateTaskDto,
+    currentUser: AuthenticatedUser,
+  ) {
     const task = await this.taskRepository.findOne({
-      where: { id: taskId, project: { id: projectId},},
+      where: { id: taskId, project: { id: projectId } },
       relations: this.taskRelations(),
     });
-    if(!task) throw AppErrors.task.taskNotFound();
 
-    if(dto.title === undefined && 
+    if (!task) throw AppErrors.task.taskNotFound();
+
+    const updatedByUser = await this.userRepository.findOne({
+      where: { id: currentUser.id },
+    });
+
+    if (!updatedByUser) throw AppErrors.auth.userNotFound();
+    if (!updatedByUser.isActive) throw AppErrors.auth.accountDisabled();
+
+    if (
+      dto.title === undefined &&
       dto.description === undefined &&
       dto.taskTypeId === undefined &&
       dto.statusId === undefined &&
@@ -187,54 +203,127 @@ export class TasksService {
       dto.parentTaskId === undefined &&
       dto.dueDate === undefined &&
       dto.estimatedHours === undefined
-    ){
+    ) {
       throw AppErrors.task.taskUpdatePayloadEmpty();
     }
-    if( dto.title !== undefined){
+
+    const changes: Array<{
+      fieldName: string;
+      oldValue: string | null;
+      newValue: string | null;
+    }> = [];
+
+    if (dto.title !== undefined) {
       const nextTitle = dto.title.trim();
-      if(!nextTitle) throw AppErrors.common.validationMessages(['Tieu de khong duoc de trong']);
-      task.title = nextTitle;
-    }
-    if(dto.description !== undefined) {
-      task.description = dto.description?.trim() || null;
-    }
-    if(dto.taskTypeId !== undefined){
-      const taskType = await this.taskTypeRepository.findOne({
-        where: { id : dto.taskTypeId},
-      });
-      if(!taskType) throw AppErrors.task.taskTypeNotFound();
-      task.taskType = taskType;
+      if (!nextTitle) {
+        throw AppErrors.common.validationMessages([
+          'Tieu de khong duoc de trong',
+        ]);
+      }
+
+      if (task.title !== nextTitle) {
+        changes.push({
+          fieldName: 'title',
+          oldValue: task.title,
+          newValue: nextTitle,
+        });
+        task.title = nextTitle;
+      }
     }
 
-    if(dto.statusId !== undefined){
-      const status = await this.taskStatusRepository.findOne({
-        where: { id: dto.statusId},
-      });
-      if(!status) throw AppErrors.task.taskStatusNotFound();
-      task.status = status;
+    if (dto.description !== undefined) {
+      const nextDescription = dto.description?.trim() || null;
+      if ((task.description || null) !== nextDescription) {
+        changes.push({
+          fieldName: 'description',
+          oldValue: task.description || null,
+          newValue: nextDescription,
+        });
+        task.description = nextDescription;
+      }
     }
+
+    if (dto.taskTypeId !== undefined) {
+      const taskType = await this.taskTypeRepository.findOne({
+        where: { id: dto.taskTypeId },
+      });
+      if (!taskType) throw AppErrors.task.taskTypeNotFound();
+
+      if (task.taskType.id !== taskType.id) {
+        changes.push({
+          fieldName: 'taskType',
+          oldValue: task.taskType.name,
+          newValue: taskType.name,
+        });
+        task.taskType = taskType;
+      }
+    }
+
+    if (dto.statusId !== undefined) {
+      const status = await this.taskStatusRepository.findOne({
+        where: { id: dto.statusId },
+      });
+      if (!status) throw AppErrors.task.taskStatusNotFound();
+
+      if (task.status.id !== status.id) {
+        changes.push({
+          fieldName: 'status',
+          oldValue: task.status.name,
+          newValue: status.name,
+        });
+        task.status = status;
+      }
+    }
+
     if (dto.priorityId !== undefined) {
       const priority = await this.priorityRepository.findOne({
         where: { id: dto.priorityId },
       });
+      if (!priority) throw AppErrors.task.priorityNotFound();
 
-      if (!priority) {
-        throw AppErrors.task.priorityNotFound();
+      if (task.priority.id !== priority.id) {
+        changes.push({
+          fieldName: 'priority',
+          oldValue: task.priority.name,
+          newValue: priority.name,
+        });
+        task.priority = priority;
       }
-
-      task.priority = priority;
     }
 
     if (dto.assigneeUserId !== undefined) {
       if (dto.assigneeUserId === null) {
+        if (task.assignee) {
+          changes.push({
+            fieldName: 'assignee',
+            oldValue: task.assignee.fullName,
+            newValue: null,
+          });
+        }
         task.assignee = null;
       } else {
-        task.assignee = await this.resolveAssignee(projectId, dto.assigneeUserId);
+        const nextAssignee = await this.resolveAssignee(projectId, dto.assigneeUserId);
+
+        if (!task.assignee || task.assignee.id !== nextAssignee.id) {
+          changes.push({
+            fieldName: 'assignee',
+            oldValue: task.assignee?.fullName || null,
+            newValue: nextAssignee.fullName,
+          });
+          task.assignee = nextAssignee;
+        }
       }
     }
 
     if (dto.parentTaskId !== undefined) {
       if (dto.parentTaskId === null) {
+        if (task.parentTask) {
+          changes.push({
+            fieldName: 'parentTask',
+            oldValue: task.parentTask.taskCode,
+            newValue: null,
+          });
+        }
         task.parentTask = null;
       } else {
         const parentTask = await this.resolveParentTask(projectId, dto.parentTaskId);
@@ -243,28 +332,69 @@ export class TasksService {
           throw AppErrors.task.invalidParentTask();
         }
 
-        task.parentTask = parentTask;
+        if (!task.parentTask || task.parentTask.id !== parentTask.id) {
+          changes.push({
+            fieldName: 'parentTask',
+            oldValue: task.parentTask?.taskCode || null,
+            newValue: parentTask.taskCode,
+          });
+          task.parentTask = parentTask;
+        }
       }
     }
 
     if (dto.dueDate !== undefined) {
-      task.dueDate = dto.dueDate || null;
+      const nextDueDate = dto.dueDate || null;
+      if ((task.dueDate || null) !== nextDueDate) {
+        changes.push({
+          fieldName: 'dueDate',
+          oldValue: task.dueDate || null,
+          newValue: nextDueDate,
+        });
+        task.dueDate = nextDueDate;
+      }
     }
 
     if (dto.estimatedHours !== undefined) {
-      task.estimatedHours = dto.estimatedHours ?? null;
+      const nextEstimatedHours =
+        dto.estimatedHours === null || dto.estimatedHours === undefined
+          ? null
+          : String(dto.estimatedHours);
+
+      const currentEstimatedHours =
+        task.estimatedHours === null || task.estimatedHours === undefined
+          ? null
+          : String(task.estimatedHours);
+
+      if (currentEstimatedHours !== nextEstimatedHours) {
+        changes.push({
+          fieldName: 'estimatedHours',
+          oldValue: currentEstimatedHours,
+          newValue: nextEstimatedHours,
+        });
+        task.estimatedHours = dto.estimatedHours ?? null;
+      }
     }
-    try{
+
+    try {
       const updatedTask = await this.taskRepository.save(task);
-      return {
+
+      if (changes.length > 0) {
+        await this.taskHistoriesService.createManyHistories(
+          updatedTask,
+          updatedByUser,
+          changes,
+        );
+      }
+
+      return successResponse({
         message: 'Cap nhat task thanh cong',
         data: await this.taskRepository.findOne({
           where: { id: updatedTask.id },
           relations: this.taskRelations(),
         }),
-        updatedBy: currentUser.id,
-      };
-    }catch {
+      });
+    } catch {
       throw AppErrors.task.taskUpdateFailed();
     }
   }

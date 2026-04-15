@@ -5,14 +5,23 @@ import { Task } from './entities/task.entity';
 import { TaskType } from './entities/task-type.entity';
 import { TaskStatus } from './entities/task-status.entity';
 import { Priority } from './entities/priority.entity';
+import { TaskComment } from './entities/task-comment.entity';
+import { TaskHistory } from './entities/task-history.entity';
 
 import { Project } from '../projects/entities/project.entity';
 import { ProjectMember } from '../projects/entities/project-member.entity';
 import { User } from '../users/entities/user.entity';
 
 import { TasksService } from './tasks.service';
+import { BoardService } from './board.service';
+import { TaskCommentsService } from './task-comments.service';
+import { TaskHistoriesService } from './task-histories.service';
+
 import { TasksController } from './tasks.controller';
 import { TaskMetaController } from './task-meta.controller';
+import { BoardController } from './board.controller';
+import { TaskCommentsController } from './task-comments.controller';
+import { TaskHistoriesController } from './task-histories.controller';
 
 @Module({
   imports: [
@@ -21,13 +30,32 @@ import { TaskMetaController } from './task-meta.controller';
       TaskType,
       TaskStatus,
       Priority,
+      TaskComment,
+      TaskHistory,
       Project,
       ProjectMember,
       User,
     ]),
   ],
-  controllers: [TasksController, TaskMetaController],
-  providers: [TasksService],
-  exports: [TasksService, TypeOrmModule],
+  controllers: [
+    TasksController,
+    TaskMetaController,
+    BoardController,
+    TaskCommentsController,
+    TaskHistoriesController,
+  ],
+  providers: [
+    TasksService,
+    BoardService,
+    TaskCommentsService,
+    TaskHistoriesService,
+  ],
+  exports: [
+    TasksService,
+    BoardService,
+    TaskCommentsService,
+    TaskHistoriesService,
+    TypeOrmModule,
+  ],
 })
 export class TasksModule {}

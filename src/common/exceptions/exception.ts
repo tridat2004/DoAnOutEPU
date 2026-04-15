@@ -299,6 +299,41 @@ export const APP_ERROR_DEFINITIONS = {
       error: 'TASK_UPDATE_PAYLOAD_EMPTY',
       message: 'Khong co du lieu hop le de cap nhat task',
     },
+    boardLoadFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'BOARD_LOAD_FAILED',
+      message: 'Khong the tai du lieu board',
+    },
+    taskStatusUpdateFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'TASK_STATUS_UPDATE_FAILED',
+      message: 'Khong the cap nhat trang thai task',
+    },
+    commentNotFound: {
+      statusCode: HttpStatus.NOT_FOUND,
+      error: 'TASK_COMMENT_NOT_FOUND',
+      message: 'Comment khong ton tai',
+    },
+    commentCreationFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'TASK_COMMENT_CREATION_FAILED',
+      message: 'Khong the tao comment',
+    },
+    commentDeletionFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'TASK_COMMENT_DELETION_FAILED',
+      message: 'Khong the xoa comment',
+    },
+    historyLoadFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'TASK_HISTORY_LOAD_FAILED',
+      message: 'Khong the tai lich su task',
+    },
+    historyCreationFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'TASK_HISTORY_CREATION_FAILED',
+      message: 'Khong the ghi lich su task',
+    },
   },
 } as const satisfies Record<string, Record<string, AppErrorDefinition>>;
 
@@ -415,6 +450,19 @@ export const AppErrors = {
     taskDeleteFailed: () => new AppException(APP_ERROR_DEFINITIONS.task.taskDeleteFailed),
     taskUpdatePayloadEmpty: () =>
       new AppException(APP_ERROR_DEFINITIONS.task.taskUpdatePayloadEmpty),
+    boardLoadFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.boardLoadFailed),
+    taskStatusUpdateFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.taskStatusUpdateFailed),
+    commentNotFound: () => new AppException(APP_ERROR_DEFINITIONS.task.commentNotFound),
+    commentCreationFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.commentCreationFailed),
+    commentDeletionFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.commentDeletionFailed),
+    historyLoadFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.historyLoadFailed),
+    historyCreationFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.historyCreationFailed),
   },
 } as const;
 

@@ -8,7 +8,8 @@ import { BaseEntity } from '../../../common/entities/base.entity';
 import { Project } from '../../projects/entities/project.entity';
 import { ProjectMember } from '../../projects/entities/project-member.entity';
 import { Task } from '../../tasks/entities/task.entity';
-
+import { TaskComment } from '../../tasks/entities/task-comment.entity';
+import { TaskHistory } from '../../tasks/entities/task-history.entity';
 @Entity('users')
 export class User extends BaseEntity {
   @Index({ unique: true })
@@ -42,4 +43,10 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Task, (task) => task.assignee)
   assignedTasks: Task[];
+
+  @OneToMany(() => TaskComment, (comment) => comment.author)
+  taskComments!: TaskComment[];
+
+  @OneToMany(() => TaskHistory, (history) => history.changedBy)
+  taskHistories!: TaskHistory[];
 }
