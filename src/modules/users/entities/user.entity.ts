@@ -10,6 +10,7 @@ import { ProjectMember } from '../../projects/entities/project-member.entity';
 import { Task } from '../../tasks/entities/task.entity';
 import { TaskComment } from '../../tasks/entities/task-comment.entity';
 import { TaskHistory } from '../../tasks/entities/task-history.entity';
+import { UserSkill } from '../../ai-assignment/entities/user-skill.entity';
 @Entity('users')
 export class User extends BaseEntity {
   @Index({ unique: true })
@@ -49,4 +50,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => TaskHistory, (history) => history.changedBy)
   taskHistories!: TaskHistory[];
+
+  @OneToMany(() => UserSkill, (userSkill) => userSkill.user)
+  userSkills!: UserSkill[];
 }

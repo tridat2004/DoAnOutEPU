@@ -334,6 +334,88 @@ export const APP_ERROR_DEFINITIONS = {
       error: 'TASK_HISTORY_CREATION_FAILED',
       message: 'Khong the ghi lich su task',
     },
+    taskTypeAlreadyExists: {
+      statusCode: HttpStatus.CONFLICT,
+      error: 'TASK_TYPE_ALREADY_EXISTS',
+      message: 'Loai task da ton tai',
+    },
+    taskStatusAlreadyExists: {
+      statusCode: HttpStatus.CONFLICT,
+      error: 'TASK_STATUS_ALREADY_EXISTS',
+      message: 'Trang thai task da ton tai',
+    },
+    priorityAlreadyExists: {
+      statusCode: HttpStatus.CONFLICT,
+      error: 'PRIORITY_ALREADY_EXISTS',
+      message: 'Do uu tien da ton tai',
+    },
+    taskTypeCreationFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'TASK_TYPE_CREATION_FAILED',
+      message: 'Khong the tao loai task',
+    },
+    taskStatusCreationFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'TASK_STATUS_CREATION_FAILED',
+      message: 'Khong the tao trang thai task',
+    },
+    priorityCreationFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'PRIORITY_CREATION_FAILED',
+      message: 'Khong the tao do uu tien',
+    },
+  },
+  aiAssignment: {
+    skillNotFound: {
+      statusCode: HttpStatus.NOT_FOUND,
+      error: 'AI_SKILL_NOT_FOUND',
+      message: 'Skill khong ton tai',
+    },
+    skillAlreadyExists: {
+      statusCode: HttpStatus.CONFLICT,
+      error: 'AI_SKILL_ALREADY_EXISTS',
+      message: 'Skill da ton tai cho user nay',
+    },
+    skillCreationFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'AI_SKILL_CREATION_FAILED',
+      message: 'Khong the tao skill cho user',
+    },
+    skillUpdateFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'AI_SKILL_UPDATE_FAILED',
+      message: 'Khong the cap nhat skill',
+    },
+    skillDeletionFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'AI_SKILL_DELETION_FAILED',
+      message: 'Khong the xoa skill',
+    },
+    recommendationFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'AI_RECOMMENDATION_FAILED',
+      message: 'Khong the goi y nguoi phu hop',
+    },
+    recommendationLogFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'AI_RECOMMENDATION_LOG_FAILED',
+      message: 'Khong the luu log goi y AI',
+    },
+    noCandidates: {
+      statusCode: HttpStatus.BAD_REQUEST,
+      error: 'AI_NO_CANDIDATES',
+      message: 'Khong co ung vien nao de goi y',
+    },
+    aiServiceCallFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'AI_SERVICE_CALL_FAILED',
+      message: 'Khong the goi AI service',
+    },
+    invalidRecommendation: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'AI_INVALID_RECOMMENDATION',
+      message: 'Ket qua goi y cua AI khong hop le',
+    },
   },
 } as const satisfies Record<string, Record<string, AppErrorDefinition>>;
 
@@ -463,7 +545,42 @@ export const AppErrors = {
       new AppException(APP_ERROR_DEFINITIONS.task.historyLoadFailed),
     historyCreationFailed: () =>
       new AppException(APP_ERROR_DEFINITIONS.task.historyCreationFailed),
+    taskTypeAlreadyExists: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.taskTypeAlreadyExists),
+    taskStatusAlreadyExists: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.taskStatusAlreadyExists),
+    priorityAlreadyExists: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.priorityAlreadyExists),
+    taskTypeCreationFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.taskTypeCreationFailed),
+    taskStatusCreationFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.taskStatusCreationFailed),
+    priorityCreationFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.priorityCreationFailed),
   },
+  aiAssignment: {
+    skillNotFound: () =>
+      new AppException(APP_ERROR_DEFINITIONS.aiAssignment.skillNotFound),
+    skillAlreadyExists: () =>
+      new AppException(APP_ERROR_DEFINITIONS.aiAssignment.skillAlreadyExists),
+    skillCreationFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.aiAssignment.skillCreationFailed),
+    skillUpdateFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.aiAssignment.skillUpdateFailed),
+    skillDeletionFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.aiAssignment.skillDeletionFailed),
+    recommendationFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.aiAssignment.recommendationFailed),
+    recommendationLogFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.aiAssignment.recommendationLogFailed),
+    noCandidates: () =>
+      new AppException(APP_ERROR_DEFINITIONS.aiAssignment.noCandidates),
+    aiServiceCallFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.aiAssignment.aiServiceCallFailed),
+    invalidRecommendation: () =>
+      new AppException(APP_ERROR_DEFINITIONS.aiAssignment.invalidRecommendation),
+  },
+  
 } as const;
 
 export function buildErrorResponse(statusCode: number, body: AppErrorBody): AppErrorResponse {

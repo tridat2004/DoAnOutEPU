@@ -5,6 +5,7 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { TasksModule } from './modules/tasks/tasks.module';
+import { AiAssignmentModule } from './modules/ai-assignment/ai-assignment.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
     AuthModule,
     ProjectsModule,
     TasksModule,
+    AiAssignmentModule,
   ],
 })
 export class AppModule {}
