@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-
+import { CreateTaskTypeDto } from './dto/create-task-type.dto';
+import { CreateTaskStatusDto } from './dto/create-task-status.dto';
+import { CreatePriorityDto } from './dto/create-priority.dto';
 import { Task } from './entities/task.entity';
 import { TaskType } from './entities/task-type.entity';
 import { TaskStatus } from './entities/task-status.entity';
@@ -43,11 +45,11 @@ export class TasksService {
     private readonly userRepository: Repository<User>,
 
     private readonly taskHistoriesService: TaskHistoriesService,
-  ) {}
+  ) { }
 
-  async getTaskTypes(){
+  async getTaskTypes() {
     const data = await this.taskTypeRepository.find({
-      order:{ name: 'ASC'},
+      order: { name: 'ASC' },
     });
 
     return successResponse({
@@ -55,9 +57,9 @@ export class TasksService {
       data
     })
   }
-  async getTaskStatuses(){
+  async getTaskStatuses() {
     const data = await this.taskStatusRepository.find({
-      order: { position: 'ASC', createdAt: 'ASC'}
+      order: { position: 'ASC', createdAt: 'ASC' }
     });
 
     return successResponse({
@@ -66,47 +68,47 @@ export class TasksService {
     })
   }
 
-  async getPriorites(){
+  async getPriorites() {
     const data = await this.priorityRepository.find({
-      order: {weight: 'DESC', createdAt: 'ASC'},
+      order: { weight: 'DESC', createdAt: 'ASC' },
     })
     return successResponse({
-      message:'Lay danh sach do uu tien thanh cong',
+      message: 'Lay danh sach do uu tien thanh cong',
       data,
     })
   }
 
-  async createTask(projectId: string, dto:CreateTaskDto, currentUser: AuthenticatedUser){
+  async createTask(projectId: string, dto: CreateTaskDto, currentUser: AuthenticatedUser) {
     const project = await this.projectRepository.findOne({
-      where: { id: projectId},
+      where: { id: projectId },
     })
     if (!project) throw AppErrors.project.projectNotFound();
 
     const reporter = await this.userRepository.findOne({
-      where: { id : currentUser.id},
+      where: { id: currentUser.id },
     })
-    if(!reporter) throw AppErrors.auth.userNotFound();
-    if(!reporter.isActive) throw AppErrors.auth.accountDisabled();
+    if (!reporter) throw AppErrors.auth.userNotFound();
+    if (!reporter.isActive) throw AppErrors.auth.accountDisabled();
 
     const taskType = await this.taskTypeRepository.findOne({
-      where :{ id: dto.taskTypeId},
+      where: { id: dto.taskTypeId },
     })
-    if(!taskType) throw AppErrors.task.taskTypeNotFound();
+    if (!taskType) throw AppErrors.task.taskTypeNotFound();
 
     const status = await this.taskStatusRepository.findOne({
-      where:{id : dto.statusId},
+      where: { id: dto.statusId },
     })
-    if(!status) throw AppErrors.task.taskStatusNotFound();
+    if (!status) throw AppErrors.task.taskStatusNotFound();
 
     const priority = await this.priorityRepository.findOne({
-      where: { id : dto.priorityId },
+      where: { id: dto.priorityId },
     });
-    if(!priority) throw AppErrors.task.priorityNotFound();
+    if (!priority) throw AppErrors.task.priorityNotFound();
 
     const assignee = dto.assigneeUserId ? await this.resolveAssignee(projectId, dto.assigneeUserId) : null;
     const parentTask = dto.parentTaskId ? await this.resolveParentTask(projectId, dto.parentTaskId) : null;
 
-    try{
+    try {
       const savedTask = await this.dataSource.transaction(async (manager) => {
         const taskCode = await this.generateNextTaskCode(project.projectKey, project.id, manager)
         const task = manager.create(Task, {
@@ -129,43 +131,43 @@ export class TasksService {
       return successResponse({
         message: 'Tao task thanh cong',
         data: await this.taskRepository.findOne({
-          where:{id:savedTask.id},
+          where: { id: savedTask.id },
           relations: this.taskRelations(),
         })
       })
-    }catch(error){
-      if(error instanceof AppException){
+    } catch (error) {
+      if (error instanceof AppException) {
         throw error;
       }
       throw AppErrors.task.taskCreationFailed();
     }
   }
-  async getTasks(projectId: string, currentUser: AuthenticatedUser){
+  async getTasks(projectId: string, currentUser: AuthenticatedUser) {
     const project = await this.projectRepository.findOne({
-      where: { id: projectId},
+      where: { id: projectId },
     })
-    if(!project) throw AppErrors.project.projectNotFound();
+    if (!project) throw AppErrors.project.projectNotFound();
 
     const tasks = await this.taskRepository.find({
-      where:{
+      where: {
         project: { id: projectId },
       },
       relations: this.taskRelations(),
-      order:{createdAt: 'DESC'}
+      order: { createdAt: 'DESC' }
     })
 
     return successResponse({
-      message:'Lay danh sach task thanh cong',
+      message: 'Lay danh sach task thanh cong',
       data: tasks,
     })
   }
 
-  async getTaskDetails(projectId: string,taskId:string, currentUser: AuthenticatedUser){
+  async getTaskDetails(projectId: string, taskId: string, currentUser: AuthenticatedUser) {
     const task = await this.taskRepository.findOne({
-      where: { id: taskId, project: { id: projectId}},
+      where: { id: taskId, project: { id: projectId } },
       relations: this.taskRelations(),
     });
-    if(!task) throw AppErrors.task.taskNotFound();
+    if (!task) throw AppErrors.task.taskNotFound();
 
     return successResponse({
       message: ' Lay thong tin task thanh cong',
@@ -398,13 +400,13 @@ export class TasksService {
       throw AppErrors.task.taskUpdateFailed();
     }
   }
-  async deleteTask(projectId: string, taskId: string, currentUser: AuthenticatedUser){
+  async deleteTask(projectId: string, taskId: string, currentUser: AuthenticatedUser) {
     const task = await this.taskRepository.findOne({
-      where: { id : taskId, project: { id: projectId },}
+      where: { id: taskId, project: { id: projectId }, }
     });
-    if(!task ) throw AppErrors.task.taskNotFound();
+    if (!task) throw AppErrors.task.taskNotFound();
 
-    try{
+    try {
       await this.taskRepository.remove(task);
 
       return successResponse({
@@ -415,26 +417,114 @@ export class TasksService {
           deletedBy: currentUser.id,
         }
       })
-    }catch{
+    } catch {
       throw AppErrors.task.taskDeleteFailed();
     }
   }
+  async createTaskType(dto: CreateTaskTypeDto) {
+    const normalizedCode = dto.code.trim().toLowerCase();
+    const normalizedName = dto.name.trim();
 
-  private async resolveAssignee(projectId: string, assigneeUserId: string){
+    const existing = await this.taskTypeRepository.findOne({
+      where: { code: normalizedCode },
+    });
+
+    if (existing) {
+      throw AppErrors.task.taskTypeAlreadyExists();
+    }
+
+    try {
+      const taskType = this.taskTypeRepository.create({
+        code: normalizedCode,
+        name: normalizedName,
+      });
+
+      const saved = await this.taskTypeRepository.save(taskType);
+
+      return successResponse({
+        message: 'Tao loai task thanh cong',
+        data: saved,
+      });
+    } catch {
+      throw AppErrors.task.taskTypeCreationFailed();
+    }
+  }
+
+  async createTaskStatus(dto: CreateTaskStatusDto) {
+    const normalizedCode = dto.code.trim().toLowerCase();
+    const normalizedName = dto.name.trim();
+
+    const existing = await this.taskStatusRepository.findOne({
+      where: { code: normalizedCode },
+    });
+
+    if (existing) {
+      throw AppErrors.task.taskStatusAlreadyExists();
+    }
+
+    try {
+      const taskStatus = this.taskStatusRepository.create({
+        code: normalizedCode,
+        name: normalizedName,
+        color: dto.color?.trim() || undefined,
+        position: dto.position,
+      });
+
+      const saved = await this.taskStatusRepository.save(taskStatus);
+
+      return successResponse({
+        message: 'Tao trang thai task thanh cong',
+        data: saved,
+      });
+    } catch {
+      throw AppErrors.task.taskStatusCreationFailed();
+    }
+  }
+
+  async createPriority(dto: CreatePriorityDto) {
+    const normalizedCode = dto.code.trim().toLowerCase();
+    const normalizedName = dto.name.trim();
+
+    const existing = await this.priorityRepository.findOne({
+      where: { code: normalizedCode },
+    });
+
+    if (existing) {
+      throw AppErrors.task.priorityAlreadyExists();
+    }
+
+    try {
+      const priority = this.priorityRepository.create({
+        code: normalizedCode,
+        name: normalizedName,
+        weight: dto.weight,
+      });
+
+      const saved = await this.priorityRepository.save(priority);
+
+      return successResponse({
+        message: 'Tao do uu tien thanh cong',
+        data: saved,
+      });
+    } catch {
+      throw AppErrors.task.priorityCreationFailed();
+    }
+  }
+  private async resolveAssignee(projectId: string, assigneeUserId: string) {
     const assignee = await this.userRepository.findOne({
-      where: { id : assigneeUserId},
+      where: { id: assigneeUserId },
     })
 
-    if(!assignee) throw AppErrors.task.assigneeNotFound();
+    if (!assignee) throw AppErrors.task.assigneeNotFound();
 
     const membership = await this.projectMemberRepository.findOne({
-      where : {
-        project : { id : projectId},
-        user: { id : assigneeUserId},
+      where: {
+        project: { id: projectId },
+        user: { id: assigneeUserId },
       },
     });
 
-    if(!membership) throw AppErrors.task.assigneeNotInProject();
+    if (!membership) throw AppErrors.task.assigneeNotInProject();
 
     return assignee;
   }
@@ -493,5 +583,6 @@ export class TasksService {
       parentTask: true,
     } as const;
   }
+
 
 }

@@ -1,3 +1,4 @@
+import { AiAssignmentLog } from '../modules/ai-assignment/entities/ai-assignment-log.entity';
 import { UserSkill } from '../modules/ai-assignment/entities/user-skill.entity';
 import { Permission } from '../modules/auth/entities/permission.entity';
 import { RolePermission } from '../modules/auth/entities/role-permission.entity';
@@ -25,4 +26,5 @@ export const databaseEntities = [
   TaskComment,
   TaskHistory,
   UserSkill,
+  AiAssignmentLog
 ] as const;

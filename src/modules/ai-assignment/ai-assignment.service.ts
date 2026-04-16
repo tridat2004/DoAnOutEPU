@@ -296,9 +296,11 @@ export class AiAssignmentService {
             requestedBy: currentUser.id,
           },
         });
-      }catch{
+      }catch (error) {
+        console.error('AI LOG SAVE ERROR:', error);
         throw AppErrors.aiAssignment.recommendationLogFailed();
       }
+
   }
   private buildRecommendationPayload(
     task: Task,
@@ -356,7 +358,7 @@ export class AiAssignmentService {
 
     try{
       const response = await firstValueFrom(
-        this.httpService.post(`${baseUrl}/recommend-assignee`, payload, { timeout: 15000 }),
+        this.httpService.post(`${baseUrl}/api/v1/recommend`, payload, { timeout: 15000 }),
       );
 
       const data = response.data;
