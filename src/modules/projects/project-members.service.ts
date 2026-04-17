@@ -10,6 +10,7 @@ import { User } from '../users/entities/user.entity';
 import { AppErrors, AppException } from '../../common/exceptions/exception';
 import { successResponse } from '../../common/response';
 import { UpdateProjectMemberRoleDto } from './dto/update-project-member-role.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ProjectMembersService {
@@ -24,7 +25,9 @@ export class ProjectMembersService {
     private readonly roleRepository: Repository<Role>,
 
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>
+    private readonly userRepository: Repository<User>,
+
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   findByProjectAndUser(projectId: string, userId: string) {
@@ -88,7 +91,16 @@ export class ProjectMembersService {
         joinedAt: new Date(),
       });
       const savedMember = await this.projectMemberRepository.save(member);
-
+      await this.notificationsService.createAndPush(user.id, {
+        type: 'project_member_added',
+        title: 'You were added to a project',
+        message: `You were added to project ${project.name} as ${role.name}`,
+        relatedUrl: `/projects/${project.id}`,
+        metadataJson: {
+          projectId: project.id,
+          roleCode: role.code,
+        },
+      });
       return successResponse({
         message:'Them thanh vien vao project thanh cong',
         data: {

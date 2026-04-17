@@ -11,6 +11,7 @@ import { AppErrors } from '../../common/exceptions/exception';
 import { successResponse } from '../../common/response';
 import { User } from '../users/entities/user.entity';
 import { TaskHistoriesService } from './task-histories.service';
+import { NotificationsService } from '../notifications/notifications.service';
 @Injectable()
 export class BoardService {
     constructor(
@@ -27,6 +28,7 @@ export class BoardService {
         private readonly userRepository: Repository<User>,
         
         private readonly taskHistoriesService: TaskHistoriesService,
+        private readonly notificationsService: NotificationsService,
     ) { }
     async getBoard(projectId: string, user: AuthenticatedUser) {
         const project = await this.projectRepository.findOne({
@@ -172,7 +174,20 @@ export class BoardService {
                 oldStatusName,
                 nextStatus.name,
             );
-
+            if (updatedTask.assignee && updatedTask.assignee.id !== currentUser.id) {
+                await this.notificationsService.createAndPush(updatedTask.assignee.id, {
+                    type: 'task_status_changed',
+                    title: 'Task status updated',
+                    message: `Task ${updatedTask.taskCode} was moved from ${oldStatusName} to ${nextStatus.name}`,
+                    relatedUrl: `/projects/${projectId}/tasks/${taskId}`,
+                    metadataJson: {
+                    projectId,
+                    taskId,
+                    fromStatus: oldStatusName,
+                    toStatus: nextStatus.name,
+                    },
+                });
+            }
             return successResponse({
                 message: 'Cap nhat trang thai task thanh cong',
                 data: {

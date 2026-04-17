@@ -19,6 +19,7 @@ import {
   AiRecommendResponse,
 } from './types/recommendation.types';
 import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interface';
+import { NotificationsService } from '../notifications/notifications.service';
 @Injectable()
 export class AiAssignmentService {
   constructor(
@@ -42,6 +43,7 @@ export class AiAssignmentService {
 
     private readonly httpService: HttpService,
     private readonly taskHistoriesService: TaskHistoriesService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async createUserSkill(userId: string, dto: CreateUserSkillDto){
@@ -548,7 +550,17 @@ export class AiAssignmentService {
         oldAssigneeName,
         recommendedUser.fullName,
       );
-
+      await this.notificationsService.createAndPush(recommendedUser.id, {
+        type: 'ai_task_assigned',
+        title: 'Task assigned by AI',
+        message: `AI assigned you to task ${updatedTask.taskCode}`,
+        relatedUrl: `/projects/${projectId}/tasks/${taskId}`,
+        metadataJson: {
+          projectId,
+          taskId,
+          aiLogId: latestLog.id,
+        },
+      });
       return successResponse({
         message: 'Ap dung goi y AI thanh cong',
         data: {

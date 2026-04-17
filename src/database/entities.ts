@@ -3,6 +3,7 @@ import { UserSkill } from '../modules/ai-assignment/entities/user-skill.entity';
 import { Permission } from '../modules/auth/entities/permission.entity';
 import { RolePermission } from '../modules/auth/entities/role-permission.entity';
 import { Role } from '../modules/auth/entities/role.entity';
+import { Notification } from '../modules/notifications/entities/notification.entity';
 import { ProjectMember } from '../modules/projects/entities/project-member.entity';
 import { Project } from '../modules/projects/entities/project.entity';
 import { TaskComment, TaskHistory } from '../modules/tasks/entities';
@@ -26,5 +27,6 @@ export const databaseEntities = [
   TaskComment,
   TaskHistory,
   UserSkill,
-  AiAssignmentLog
+  AiAssignmentLog,
+  Notification
 ] as const;

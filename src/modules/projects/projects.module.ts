@@ -10,9 +10,13 @@ import { ProjectController } from './projects.controller';
 import { ProjectMembersController } from './project-members.controller';
 import { ProjectsService } from './projects.service';
 import { ProjectMembersService } from './project-members.service';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Project, ProjectMember, Role, User])],
+  imports: [
+    TypeOrmModule.forFeature([Project, ProjectMember, Role, User]),
+    NotificationsModule,
+  ],
   controllers: [ProjectController, ProjectMembersController],
   providers: [ProjectsService, ProjectMembersService],
   exports: [ProjectsService, ProjectMembersService, TypeOrmModule],

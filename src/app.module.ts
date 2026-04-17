@@ -6,6 +6,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { AiAssignmentModule } from './modules/ai-assignment/ai-assignment.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AiAssignmentModule } from './modules/ai-assignment/ai-assignment.module
     ProjectsModule,
     TasksModule,
     AiAssignmentModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

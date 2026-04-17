@@ -437,6 +437,33 @@ export const APP_ERROR_DEFINITIONS = {
       message: 'Khong the ap dung goi y AI vao task',
     },
   },
+  notification: {
+    notificationNotFound: {
+      statusCode: HttpStatus.NOT_FOUND,
+      error: 'NOTIFICATION_NOT_FOUND',
+      message: 'Thong bao khong ton tai',
+    },
+    notificationLoadFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'NOTIFICATION_LOAD_FAILED',
+      message: 'Khong the tai danh sach thong bao',
+    },
+    notificationCreationFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'NOTIFICATION_CREATION_FAILED',
+      message: 'Khong the tao thong bao',
+    },
+    notificationReadFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'NOTIFICATION_READ_FAILED',
+      message: 'Khong the cap nhat trang thai thong bao',
+    },
+    notificationDeleteFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'NOTIFICATION_DELETE_FAILED',
+      message: 'Khong the xoa thong bao',
+    },
+  },
 } as const satisfies Record<string, Record<string, AppErrorDefinition>>;
 
 export class AppException extends HttpException {
@@ -607,6 +634,18 @@ export const AppErrors = {
       new AppException(APP_ERROR_DEFINITIONS.aiAssignment.recommendationLoadFailed),
     aiAssignFailed: () =>
       new AppException(APP_ERROR_DEFINITIONS.aiAssignment.aiAssignFailed),
+  },
+  notification: {
+    notificationNotFound: () =>
+      new AppException(APP_ERROR_DEFINITIONS.notification.notificationNotFound),
+    notificationLoadFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.notification.notificationLoadFailed),
+    notificationCreationFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.notification.notificationCreationFailed),
+    notificationReadFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.notification.notificationReadFailed),
+    notificationDeleteFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.notification.notificationDeleteFailed),
   },
   
 } as const;

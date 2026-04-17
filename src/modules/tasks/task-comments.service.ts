@@ -10,6 +10,7 @@ import { AuthenticatedUser } from '../auth/interfaces/authenticated-user.interfa
 import { AppErrors, AppException } from '../../common/exceptions/exception';
 import { successResponse } from '../../common/response';
 import { TaskHistoriesService } from './task-histories.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class TaskCommentsService {
@@ -24,7 +25,8 @@ export class TaskCommentsService {
     private readonly userRepository: Repository<User>,
 
     private readonly taskHistoriesService: TaskHistoriesService,
-  ) {}
+    private readonly notificationsService: NotificationsService,
+  ) { }
 
   async createComment(
     projectId: string,
@@ -66,7 +68,29 @@ export class TaskCommentsService {
       });
 
       const savedComment = await this.taskCommentRepository.save(comment);
+      const receiverIds = new Set<string>();
 
+      if (task.assignee?.id && task.assignee.id !== author.id) {
+        receiverIds.add(task.assignee.id);
+      }
+
+      if (task.reporter?.id && task.reporter.id !== author.id) {
+        receiverIds.add(task.reporter.id);
+      }
+
+      for (const receiverId of receiverIds) {
+        await this.notificationsService.createAndPush(receiverId, {
+          type: 'task_commented',
+          title: 'New comment on task',
+          message: `${author.fullName} commented on task ${task.taskCode}`,
+          relatedUrl: `/projects/${projectId}/tasks/${taskId}`,
+          metadataJson: {
+            projectId,
+            taskId,
+            authorUserId: author.id,
+          },
+        });
+      }
       await this.taskHistoriesService.createHistory(
         task,
         author,
