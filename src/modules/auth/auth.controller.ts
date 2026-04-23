@@ -15,6 +15,7 @@ import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthenticatedUser } from './interfaces/authenticated-user.interface';
 import { RegisterDto } from './dto/register.dto';
+import { successResponse } from '../../common/response';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -32,6 +33,7 @@ export class AuthController {
   }
 
   @Public()
+  @HttpCode(200)
   @Post('refresh')
   async refresh(
     @Req() req: Request,
@@ -54,10 +56,10 @@ export class AuthController {
   @ApiCookieAuth('access_token')
   @Get('me')
   async me(@CurrentUser() user: AuthenticatedUser) {
-    return {
-      message: 'Lấy thông tin thành công',
-      user,
-    };
+    return successResponse({
+      message: ' Lay thong tin user thanh cong',
+      data: user
+    });
   }
 
   @Public()

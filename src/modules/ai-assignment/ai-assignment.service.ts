@@ -25,6 +25,14 @@ import {
   AiProjectSummaryPayload,
   AiProjectSummaryResponse,
 } from './types/project-summary.types';
+import { TaskComment } from '../tasks/entities/task-comment.entity';
+import { TaskHistory } from '../tasks/entities/task-history.entity';
+import {
+  AiProjectRiskSummaryPayload,
+  AiProjectRiskSummaryResponse,
+  AiTaskRiskPayload,
+  AiTaskRiskResponse,
+} from './types/project-risk.types';
 @Injectable()
 export class AiAssignmentService {
   constructor(
@@ -50,6 +58,11 @@ export class AiAssignmentService {
     private readonly taskHistoriesService: TaskHistoriesService,
     private readonly notificationsService: NotificationsService,
     private readonly dashboardService: DashboardService,
+    @InjectRepository(TaskComment)
+    private readonly taskCommentRepository: Repository<TaskComment>,
+
+    @InjectRepository(TaskHistory)
+    private readonly taskHistoryRepository: Repository<TaskHistory>,
   ) { }
 
   async createUserSkill(userId: string, dto: CreateUserSkillDto) {
@@ -706,6 +719,313 @@ export class AiAssignmentService {
       return response.data;
     } catch {
       throw AppErrors.aiAssignment.projectSummaryFailed();
+    }
+  }
+
+  async getProjectRiskSummary(projectId: string) {
+    const dashboardResponse = await this.dashboardService.getProjectDashboard(
+      projectId,
+      {
+        id: 'system',
+        email: '',
+        username: '',
+        fullName: '',
+        isActive: true,
+      }
+    );
+
+    const dashboarData = dashboardResponse.data;
+
+    const task = await this.taskRepository.find({
+      where: {
+        project: { id: projectId },
+      },
+      relations: {
+        status: true,
+        priority: true,
+        assignee: true,
+        project: true,
+      },
+      order: {
+        updatedAt: 'DESC',
+      }
+    });
+
+    const payload = this.buildProjectRiskSummaryPayload(dashboarData, task);
+    const result = await this.callAiProjectRiskSummaryService(payload);
+
+    if (
+      !result?.projectRiskLevel ||
+      !Array.isArray(result?.topRisks) ||
+      !Array.isArray(result?.overloadedMembers) ||
+      !Array.isArray(result?.tasksNeedingAttention) ||
+      !Array.isArray(result?.recommendedActions)
+    ) {
+      throw AppErrors.aiAssignment.projectRiskSummaryInvalid();
+    }
+
+    return successResponse({
+      message: 'AI tao project risk summary thanh cong',
+      data: result,
+    })
+  }
+  private buildProjectRiskSummaryPayload(
+    dashboardData: any,
+    tasks: Task[],
+  ): AiProjectRiskSummaryPayload {
+    return {
+      project: {
+        id: dashboardData.project.id,
+        name: dashboardData.project.name,
+        projectKey: dashboardData.project.projectKey,
+        description: dashboardData.project.description || null,
+      },
+      taskSummary: {
+        totalTasks: dashboardData.taskSummary.totalTasks,
+        byStatus: dashboardData.taskSummary.byStatus.map((item: any) => ({
+          code: item.code,
+          name: item.name,
+          count: item.count,
+        })),
+      },
+      prioritySummary: dashboardData.prioritySummary.map((item: any) => ({
+        code: item.code,
+        name: item.name,
+        count: item.count,
+      })),
+      workloadSummary: dashboardData.workloadSummary.map((item: any) => ({
+        fullName: item.user.fullName,
+        role: item.role.code,
+        totalAssignedTasks: item.workload.totalAssignedTasks,
+        openTasks: item.workload.openTasks,
+        doneTasks: item.workload.doneTasks,
+      })),
+      dueSummary: {
+        overdueTasks: dashboardData.dueSummary.overdueTasks,
+        dueToday: dashboardData.dueSummary.dueToday,
+        dueThisWeek: dashboardData.dueSummary.dueThisWeek,
+      },
+      recentActivities: dashboardData.recentActivities.map((item: any) => ({
+        fieldName: item.fieldName,
+        oldValue: item.oldValue,
+        newValue: item.newValue,
+        taskCode: item.task.taskCode,
+        taskTitle: item.task.title,
+        changedByFullName: item.changedBy.fullName,
+        createdAt: item.createdAt,
+      })),
+      tasks: tasks.map((task) => ({
+        id: task.id,
+        taskCode: task.taskCode,
+        title: task.title,
+        description: task.description || null,
+        statusCode: task.status.code,
+        statusName: task.status.name,
+        priorityCode: task.priority.code,
+        priorityName: task.priority.name,
+        assigneeFullName: task.assignee?.fullName || null,
+        dueDate: task.dueDate || null,
+        estimatedHours: task.estimatedHours,
+        updatedAt: task.updatedAt.toISOString(),
+      })),
+    };
+  }
+
+  private async callAiProjectRiskSummaryService(
+    payload: AiProjectRiskSummaryPayload,
+  ): Promise<AiProjectRiskSummaryResponse> {
+    const baseUrl = process.env.AI_AGENT_BASE_URL;
+
+    if (!baseUrl) {
+      throw AppErrors.aiAssignment.projectRiskSummaryFailed();
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post<AiProjectRiskSummaryResponse>(
+          `${baseUrl}/api/v1/project-risk-summary`,
+          payload,
+          {
+            timeout: 20000,
+          },
+        ),
+      );
+
+      return response.data;
+    } catch {
+      throw AppErrors.aiAssignment.projectRiskSummaryFailed();
+    }
+  }
+
+  async getTaskRisk(projectId: string, taskId: string) {
+    const task = await this.taskRepository.findOne({
+      where: {
+        id: taskId,
+        project: { id: projectId },
+      },
+      relations: {
+        project: true,
+        status: true,
+        priority: true,
+        assignee: true,
+      },
+    });
+
+    if (!task) {
+      throw AppErrors.task.taskNotFound();
+    }
+
+    const recentActivities = await this.taskHistoryRepository.find({
+      where: {
+        task: { id: taskId },
+      },
+      relations: {
+        changedBy: true,
+        task: true,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+      take: 10,
+    });
+
+    const comments = await this.taskCommentRepository.find({
+      where: {
+        task: { id: taskId },
+      },
+      relations: {
+        author: true,
+        task: true,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+      take: 10,
+    });
+
+    let workloadContext = {
+      assigneeOpenTasks: null as number | null,
+      assigneeDoneTasks: null as number | null,
+    };
+
+    if (task.assignee) {
+      const workload = await this.taskRepository
+        .createQueryBuilder('task')
+        .leftJoin('task.status', 'status')
+        .select(
+          `SUM(CASE WHEN status.code != 'done' THEN 1 ELSE 0 END)`,
+          'openCount',
+        )
+        .addSelect(
+          `SUM(CASE WHEN status.code = 'done' THEN 1 ELSE 0 END)`,
+          'doneCount',
+        )
+        .where('task.project_id = :projectId', { projectId })
+        .andWhere('task.assignee_user_id = :assigneeUserId', {
+          assigneeUserId: task.assignee.id,
+        })
+        .getRawOne<{ openCount: string; doneCount: string }>();
+
+      workloadContext = {
+        assigneeOpenTasks: Number(workload?.openCount ?? 0),
+        assigneeDoneTasks: Number(workload?.doneCount ?? 0),
+      };
+    }
+
+    const payload = this.buildTaskRiskPayload(
+      task,
+      recentActivities,
+      comments,
+      workloadContext,
+    );
+
+    const result = await this.callAiTaskRiskService(payload);
+
+    if (
+      !result?.taskRiskLevel ||
+      !Array.isArray(result?.reasons) ||
+      typeof result?.blockerSummary !== 'string' ||
+      typeof result?.shouldEscalatePriority !== 'boolean' ||
+      typeof result?.suggestedNextAction !== 'string'
+    ) {
+      throw AppErrors.aiAssignment.taskRiskInvalid();
+    }
+
+    return successResponse({
+      message: 'AI phan tich rui ro task thanh cong',
+      data: result,
+    });
+  }
+
+  private buildTaskRiskPayload(
+    task: Task,
+    recentActivities: TaskHistory[],
+    comments: TaskComment[],
+    workloadContext: {
+      assigneeOpenTasks: number | null;
+      assigneeDoneTasks: number | null;
+    },
+  ): AiTaskRiskPayload {
+    return {
+      project: {
+        id: task.project.id,
+        name: task.project.name,
+        projectKey: task.project.projectKey,
+      },
+      task: {
+        id: task.id,
+        taskCode: task.taskCode,
+        title: task.title,
+        description: task.description || null,
+        statusCode: task.status.code,
+        statusName: task.status.name,
+        priorityCode: task.priority.code,
+        priorityName: task.priority.name,
+        assigneeFullName: task.assignee?.fullName || null,
+        dueDate: task.dueDate || null,
+        estimatedHours: task.estimatedHours,
+        createdAt: task.createdAt.toISOString(),
+        updatedAt: task.updatedAt.toISOString(),
+      },
+      recentActivities: recentActivities.map((item) => ({
+        fieldName: item.fieldName,
+        oldValue: item.oldValue,
+        newValue: item.newValue,
+        changedByFullName: item.changedBy.fullName,
+        createdAt: item.createdAt.toISOString(),
+      })),
+      comments: comments.map((item) => ({
+        authorFullName: item.author.fullName,
+        content: item.content,
+        createdAt: item.createdAt.toISOString(),
+      })),
+      workloadContext,
+    };
+  }
+
+  private async callAiTaskRiskService(
+    payload: AiTaskRiskPayload,
+  ): Promise<AiTaskRiskResponse> {
+    const baseUrl = process.env.AI_AGENT_BASE_URL;
+
+    if (!baseUrl) {
+      throw AppErrors.aiAssignment.taskRiskFailed();
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post<AiTaskRiskResponse>(
+          `${baseUrl}/api/v1/task-risk`,
+          payload,
+          {
+            timeout: 20000,
+          },
+        ),
+      );
+
+      return response.data;
+    } catch {
+      throw AppErrors.aiAssignment.taskRiskFailed();
     }
   }
 }

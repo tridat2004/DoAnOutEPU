@@ -451,6 +451,26 @@ export const APP_ERROR_DEFINITIONS = {
       error: 'AI_PROJECT_SUMMARY_INVALID',
       message: 'Ket qua project summary AI khong hop le',
     },
+    projectRiskSummaryFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'AI_PROJECT_RISK_SUMMARY_FAILED',
+      message: 'Khong the tao project risk summary bang AI',
+    },
+    projectRiskSummaryInvalid: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'AI_PROJECT_RISK_SUMMARY_INVALID',
+      message: 'Ket qua project risk summary AI khong hop le',
+    },
+    taskRiskFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'AI_TASK_RISK_FAILED',
+      message: 'Khong the phan tich rui ro task bang AI',
+    },
+    taskRiskInvalid: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'AI_TASK_RISK_INVALID',
+      message: 'Ket qua task risk AI khong hop le',
+    },
   },
   notification: {
     notificationNotFound: {
@@ -484,6 +504,20 @@ export const APP_ERROR_DEFINITIONS = {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       error: 'DASHBOARD_LOAD_FAILED',
       message: 'Khong the tai du lieu dashboard',
+    },
+  },
+  users: {
+    userLoadFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'USER_LOAD_FAILED',
+      message: 'Khong the tai danh sach user',
+    },
+  },
+  roles: {
+    roleLoadFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'ROLE_LOAD_FAILED',
+      message: 'Khong the tai danh sach role',
     },
   },
 } as const satisfies Record<string, Record<string, AppErrorDefinition>>;
@@ -662,6 +696,14 @@ export const AppErrors = {
       new AppException(APP_ERROR_DEFINITIONS.aiAssignment.projectSummaryFailed),
     projectSummaryInvalid: () =>
       new AppException(APP_ERROR_DEFINITIONS.aiAssignment.projectSummaryInvalid),
+    projectRiskSummaryFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.aiAssignment.projectRiskSummaryFailed),
+    projectRiskSummaryInvalid: () =>
+      new AppException(APP_ERROR_DEFINITIONS.aiAssignment.projectRiskSummaryInvalid),
+    taskRiskFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.aiAssignment.taskRiskFailed),
+    taskRiskInvalid: () =>
+      new AppException(APP_ERROR_DEFINITIONS.aiAssignment.taskRiskInvalid),
   },
   notification: {
     notificationNotFound: () =>
@@ -678,6 +720,14 @@ export const AppErrors = {
   dashboard: {
     dashboardLoadFailed: () =>
       new AppException(APP_ERROR_DEFINITIONS.dashboard.dashboardLoadFailed),
+  },
+  users: {
+    userLoadFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.users.userLoadFailed),
+  },
+  roles: {
+    roleLoadFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.roles.roleLoadFailed),
   },
 } as const;
 

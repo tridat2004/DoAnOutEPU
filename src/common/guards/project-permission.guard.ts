@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
+import { validate as validateUUID } from 'uuid';
 import { AppErrors } from '../exceptions/exception';
 import { PROJECT_PERMISSIONS_KEY } from '../../modules/auth/constants/auth.constants';
 import { ProjectMembersService } from '../../modules/projects/project-members.service';
@@ -64,11 +65,17 @@ export class ProjectPermissionGuard implements CanActivate {
     const body = request.body as Record<string, unknown> | undefined;
     const query = request.query as Record<string, string | undefined>;
 
-    return (
+    const projectId =
       params?.projectId ||
       params?.id ||
       (typeof body?.projectId === 'string' ? body.projectId : undefined) ||
-      query?.projectId
-    );
+      query?.projectId;
+
+    // Validate that projectId is a valid UUID
+    if (projectId && !validateUUID(projectId)) {
+      return undefined;
+    }
+
+    return projectId;
   }
 }

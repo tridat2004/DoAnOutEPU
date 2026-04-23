@@ -19,7 +19,9 @@ import { TaskType } from '../tasks/entities/task-type.entity';
 import { Priority } from '../tasks/entities/priority.entity';
 import { TaskStatus } from '../tasks/entities/task-status.entity';
 import { DashboardModule } from '../dashboard/dashboard.module';
-
+import { AiProjectRiskController } from './ai-project-risk.controller';
+import { TaskComment } from '../tasks/entities/task-comment.entity';
+import { TaskHistory } from '../tasks/entities/task-history.entity';
 @Module({
   imports: [
     HttpModule,
@@ -36,9 +38,11 @@ import { DashboardModule } from '../dashboard/dashboard.module';
       TaskType,
       Priority,
       TaskStatus,
+      TaskComment,
+      TaskHistory,
     ]),
   ],
-  controllers: [AiAssignmentController, AiRecommendationController, AiProjectSummaryController],
+  controllers: [AiAssignmentController, AiRecommendationController, AiProjectSummaryController, AiProjectRiskController],
   providers: [AiAssignmentService],
   exports: [AiAssignmentService, TypeOrmModule],
 })

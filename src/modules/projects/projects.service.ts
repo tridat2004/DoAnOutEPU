@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { DataSource, In, Repository } from "typeorm"; 
+import { DataSource, In, Repository } from "typeorm";
 import { Project } from "./entities/project.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { ProjectMember } from "./entities/project-member.entity";
@@ -28,7 +28,7 @@ export class ProjectsService {
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async createProject(dto: CreateProjectDto, currentUser: AuthenticatedUser) {
     if (!currentUser?.id) {
@@ -114,15 +114,15 @@ export class ProjectsService {
     }
   }
 
-  async getProjectDetail(projectId: string, currentUser: AuthenticatedUser){
-    if(!currentUser?.id){
+  async getProjectDetail(projectId: string, currentUser: AuthenticatedUser) {
+    if (!currentUser?.id) {
       throw AppErrors.project.authRequired();
     }
 
     const membership = await this.projectMemberRepository.findOne({
       where: {
-        project: {id : projectId},
-        user: { id: currentUser.id},
+        project: { id: projectId },
+        user: { id: currentUser.id },
       },
       relations: {
         project: {
@@ -132,12 +132,12 @@ export class ProjectsService {
       }
     });
 
-    if(!membership){
+    if (!membership) {
       const project = await this.projectRepository.findOne({
-        where: { id : projectId},
+        where: { id: projectId },
       });
 
-      if(!project){
+      if (!project) {
         throw AppErrors.project.projectNotFound();
       }
 
@@ -153,11 +153,11 @@ export class ProjectsService {
         description: membership.project.description,
         owner: membership.project.owner
           ? {
-              id: membership.project.owner.id,
-              email: membership.project.owner.email,
-              username: membership.project.owner.username,
-              fullName: membership.project.owner.fullName,
-            }
+            id: membership.project.owner.id,
+            email: membership.project.owner.email,
+            username: membership.project.owner.username,
+            fullName: membership.project.owner.fullName,
+          }
           : null,
         myRole: {
           id: membership.role.id,
@@ -168,41 +168,50 @@ export class ProjectsService {
     })
   }
 
-  async getMyProject(currentUser: AuthenticatedUser){
-    if(!currentUser?.id){
+  async getMyProject(currentUser: AuthenticatedUser) {
+    if (!currentUser?.id) {
       throw AppErrors.project.authRequired();
     }
 
     const user = await this.userRepository.findOne({
-      where: { id: currentUser.id},
-    })
+      where: { id: currentUser.id },
+    });
 
-    if(!user) {
-      throw AppErrors.auth.userNotFound();
-    }
-    if(!user.isActive){
-      throw AppErrors.auth.accountDisabled();
-    }
+    if (!user) throw AppErrors.auth.userNotFound();
+    if (!user.isActive) throw AppErrors.auth.accountDisabled();
 
     const memberships = await this.projectMemberRepository.find({
-      where:{
-        user: { id : currentUser.id},
+      where: {
+        user: { id: currentUser.id },
       },
       relations: {
-        project: true,
+        project: {
+          owner: true,
+        },
         role: true,
       },
-      order:{
+      order: {
         createdAt: 'DESC',
-      }
+      },
     });
+
     return successResponse({
       message: 'Lấy danh sách project thành công',
       data: memberships.map((item) => ({
-        projectId: item.project.id,
+        id: item.project.id,           
+        createdAt: item.project.createdAt,
+        updatedAt: item.project.updatedAt,
         name: item.project.name,
         projectKey: item.project.projectKey,
         description: item.project.description,
+        owner: item.project.owner
+          ? {
+            id: item.project.owner.id,
+            email: item.project.owner.email,
+            username: item.project.owner.username,
+            fullName: item.project.owner.fullName,
+          }
+          : null,
         role: {
           id: item.role.id,
           code: item.role.code,
@@ -210,42 +219,40 @@ export class ProjectsService {
         },
         joinedAt: item.joinedAt,
       })),
-    })
+    });
   }
 
-  async updateProject(projectId: string, dto: UpdateProjectDto, currentUser: AuthenticatedUser){
+  async updateProject(
+    projectId: string,
+    dto: UpdateProjectDto,
+    currentUser: AuthenticatedUser,
+  ) {
     const project = await this.projectRepository.findOne({
-      where: {id : projectId},
-      relations: {
-        owner: true,
-      }
-    })
+      where: { id: projectId },
+      relations: { owner: true },
+    });
 
-    if(!project){
-      throw AppErrors.project.projectNotFound();
+    if (!project) throw AppErrors.project.projectNotFound();
+    if (project.owner.id !== currentUser.id) {
+      throw AppErrors.project.permissionDenied();
     }
 
-    const nextName = dto.name !== undefined ? dto.name.trim() : undefined;
-    const nextDescription = dto.description !== undefined? dto.description.trim() : undefined;
-
-    if(dto.name === undefined && dto.description === undefined){
+    if (dto.name === undefined && dto.description === undefined) {
       throw AppErrors.project.projectUpdatePayloadEmpty();
     }
 
-    if(dto.name !== undefined && !nextName){
-      throw AppErrors.common.validationMessages([
-        'Tên project không được để trống',
-      ])
+    const nextName = dto.name !== undefined ? dto.name.trim() : undefined;
+    const nextDescription =
+      dto.description !== undefined ? dto.description.trim() : undefined;
+
+    if (dto.name !== undefined && !nextName) {
+      throw AppErrors.common.validationMessages(['Tên project không được để trống']);
     }
 
-    if(nextName !== undefined){
-      project.name = nextName;
-    }
+    if (nextName !== undefined) project.name = nextName;
+    if (nextDescription !== undefined) project.description = nextDescription || undefined;
 
-    if( nextDescription !== undefined){
-      project.description = nextDescription ||undefined;
-    }
-    try{
+    try {
       const updated = await this.projectRepository.save(project);
 
       return successResponse({
@@ -257,38 +264,45 @@ export class ProjectsService {
           description: updated.description,
           owner: updated.owner
             ? {
-                id: updated.owner.id,
-                email: updated.owner.email,
-                username: updated.owner.username,
-                fullName: updated.owner.fullName,
-              }
+              id: updated.owner.id,
+              email: updated.owner.email,
+              username: updated.owner.username,
+              fullName: updated.owner.fullName,
+            }
             : null,
           updatedBy: currentUser.id,
-        }
-      })
-    }catch{
+        },
+      });
+    } catch {
       throw AppErrors.project.projectUpdateFailed();
     }
   }
 
-  async deleteProject(projectId: string, currentUser: AuthenticatedUser){
+  async deleteProject(projectId: string, currentUser: AuthenticatedUser) {
     const project = await this.projectRepository.findOne({
-      where:{id:projectId},
-    })
+      where: { id: projectId },
+      relations: { owner: true }, 
+    });
 
-    if(!project) throw AppErrors.project.projectNotFound();
+    if (!project) throw AppErrors.project.projectNotFound();
 
-    try{
+    if (project.owner.id !== currentUser.id) {
+      throw AppErrors.project.permissionDenied();
+    }
+
+    const deletedId = project.id; 
+
+    try {
       await this.projectRepository.remove(project);
 
       return successResponse({
-        message:'Xoá project thành công',
-        data:{
-          id: project.id,
+        message: 'Xoá project thành công',
+        data: {
+          id: deletedId,
           deletedBy: currentUser.id,
-        }
+        },
       });
-    }catch{
+    } catch {
       throw AppErrors.project.projectDeleteFailed();
     }
   }
