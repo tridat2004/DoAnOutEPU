@@ -717,7 +717,9 @@ export class AiAssignmentService {
       );
 
       return response.data;
-    } catch {
+    } catch (error: any) {
+      console.log('AI PROJECT SUMMARY ERROR STATUS:', error?.response?.status);
+      console.log('AI PROJECT SUMMARY ERROR DATA:', error?.response?.data);
       throw AppErrors.aiAssignment.projectSummaryFailed();
     }
   }
@@ -852,7 +854,9 @@ export class AiAssignmentService {
       );
 
       return response.data;
-    } catch {
+    } catch (error: any) {
+      console.log('AI PROJECT RISK ERROR STATUS:', error?.response?.status);
+      console.log('AI PROJECT RISK ERROR DATA:', error?.response?.data);
       throw AppErrors.aiAssignment.projectRiskSummaryFailed();
     }
   }

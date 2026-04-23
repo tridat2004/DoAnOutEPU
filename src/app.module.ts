@@ -8,6 +8,8 @@ import { TasksModule } from './modules/tasks/tasks.module';
 import { AiAssignmentModule } from './modules/ai-assignment/ai-assignment.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { BoardModule } from './modules/board/board.module';
+import { TimelineModule } from './modules/timeline/timeline.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     AiAssignmentModule,
     NotificationsModule,
     DashboardModule,
+    BoardModule,
+    TimelineModule,
   ],
 })
 export class AppModule {}
