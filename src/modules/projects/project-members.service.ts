@@ -75,12 +75,12 @@ export class ProjectMembersService {
     });
 
     if (!role) throw AppErrors.project.roleNotFound();
-    
+
     const currentUserEntity = await this.userRepository.findOne({
       where: { id: currentUser.id }
     });
     if (!currentUserEntity) throw AppErrors.auth.userNotFound();
-    
+
     const exitstingMember = await this.projectMemberRepository.findOne({
       where: {
         project: { id: projectId },
@@ -106,10 +106,12 @@ export class ProjectMembersService {
         type: 'project_member_added',
         title: 'You were added to a project',
         message: `You were added to project ${project.name} as ${role.name}`,
-        relatedUrl: `/projects/${project.id}`,
+        relatedUrl: `/projects/${project.id}/members`,
         metadataJson: {
           projectId: project.id,
+          projectName: project.name,
           roleCode: role.code,
+          roleName: role.name
         },
       });
       await this.activityService.log({
@@ -288,18 +290,18 @@ export class ProjectMembersService {
     try {
       await this.projectMemberRepository.remove(member);
       await this.activityService.log({
-  actor: currentUserEntity,
-  project,
-  actionType: ActivityAction.PROJECT_MEMBER_REMOVED,
-  targetType: ActivityTargetType.MEMBER,
-  targetId: member.id,
-  message: `${currentUserEntity.fullName} da xoa ${member.user.fullName} khoi project ${project.name}`,
-  metadata: {
-    memberId: member.id,
-    removedUserId: member.user.id,
-    removedUserFullName: member.user.fullName,
-  },
-});
+        actor: currentUserEntity,
+        project,
+        actionType: ActivityAction.PROJECT_MEMBER_REMOVED,
+        targetType: ActivityTargetType.MEMBER,
+        targetId: member.id,
+        message: `${currentUserEntity.fullName} da xoa ${member.user.fullName} khoi project ${project.name}`,
+        metadata: {
+          memberId: member.id,
+          removedUserId: member.user.id,
+          removedUserFullName: member.user.fullName,
+        },
+      });
       return successResponse({
         message: 'Xoa thanh vien khoi project thanh cong',
         data: {

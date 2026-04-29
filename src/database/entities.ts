@@ -9,6 +9,8 @@ import { ProjectMember } from '../modules/projects/entities/project-member.entit
 import { Project } from '../modules/projects/entities/project.entity';
 import { TaskComment, TaskHistory } from '../modules/tasks/entities';
 import { Priority } from '../modules/tasks/entities/priority.entity';
+import { TaskCommentAttachment } from '../modules/tasks/entities/task-comment-attachment.entity';
+import { TaskCommentReaction } from '../modules/tasks/entities/task-comment-reaction.entity';
 import { TaskStatus } from '../modules/tasks/entities/task-status.entity';
 import { TaskType } from '../modules/tasks/entities/task-type.entity';
 import { Task } from '../modules/tasks/entities/task.entity';
@@ -31,4 +33,6 @@ export const databaseEntities = [
   AiAssignmentLog,
   Notification,
   ActivityLog,
+  TaskCommentAttachment,
+  TaskCommentReaction
 ] as const;

@@ -11,9 +11,15 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { BoardModule } from './modules/board/board.module';
 import { TimelineModule } from './modules/timeline/timeline.module';
 import { ActivityModule } from './modules/activity/activity.module';
-
+import { ServeStaticModule } from '@nestjs/serve-static'
+import { join } from 'path'
+import { TaskCommentAttachment } from './modules/tasks/entities/task-comment-attachment.entity';
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
+    }),
     TypeOrmModule.forRoot({
       ...createDatabaseOptions(),
       autoLoadEntities: false,
@@ -28,6 +34,7 @@ import { ActivityModule } from './modules/activity/activity.module';
     BoardModule,
     TimelineModule,
     ActivityModule,
+    TaskCommentAttachment
   ],
 })
-export class AppModule {}
+export class AppModule { }

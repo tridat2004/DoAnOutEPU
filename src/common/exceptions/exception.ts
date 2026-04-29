@@ -134,6 +134,11 @@ export const APP_ERROR_DEFINITIONS = {
       error: 'ACCOUNT_CREATION_FAILED',
       message: 'Khong the tao tai khoan',
     },
+    forbidden: {
+      statusCode: HttpStatus.FORBIDDEN,
+      error: 'AUTH_FORBIDDEN',
+      message: 'Ban khong co quyen truy cap tai nguyen nay',
+    },
   },
   project: {
     authRequired: {
@@ -297,7 +302,7 @@ export const APP_ERROR_DEFINITIONS = {
     taskDeleteFailed: {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       error: 'TASK_DELETE_FAILED',
-      message: 'Khong the xoa task',
+      message: 'Khong the xoa task. Vui long kiem tra lai hoac lien he support',
     },
     taskUpdatePayloadEmpty: {
       statusCode: HttpStatus.BAD_REQUEST,
@@ -323,6 +328,11 @@ export const APP_ERROR_DEFINITIONS = {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       error: 'TASK_COMMENT_CREATION_FAILED',
       message: 'Khong the tao comment',
+    },
+    commentUpdateFailed: {
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'TASK_COMMENT_UPDATE_FAILED',
+      message: 'Khong the cap nhat comment',
     },
     commentDeletionFailed: {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -598,6 +608,7 @@ export const AppErrors = {
       new AppException(APP_ERROR_DEFINITIONS.auth.usernameAlreadyExists),
     passwordHashFailed: () => new AppException(APP_ERROR_DEFINITIONS.auth.passwordHashFailed),
     accountCreationFailed: () => new AppException(APP_ERROR_DEFINITIONS.auth.accountCreationFailed),
+    forbidden: () => new AppException(APP_ERROR_DEFINITIONS.auth.forbidden),
   },
   project: {
     authRequired: () => new AppException(APP_ERROR_DEFINITIONS.project.authRequired),
@@ -659,6 +670,8 @@ export const AppErrors = {
     commentNotFound: () => new AppException(APP_ERROR_DEFINITIONS.task.commentNotFound),
     commentCreationFailed: () =>
       new AppException(APP_ERROR_DEFINITIONS.task.commentCreationFailed),
+    commentUpdateFailed: () =>
+      new AppException(APP_ERROR_DEFINITIONS.task.commentUpdateFailed),
     commentDeletionFailed: () =>
       new AppException(APP_ERROR_DEFINITIONS.task.commentDeletionFailed),
     historyLoadFailed: () =>

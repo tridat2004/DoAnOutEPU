@@ -18,17 +18,17 @@ export class CreateTaskDto {
   @IsString({ message: 'Mo ta phai la chuoi' })
   description?: string;
 
+  @IsOptional()
   @IsUUID('4', { message: 'taskTypeId khong hop le' })
-  @IsNotEmpty({ message: 'taskTypeId khong duoc de trong' })
-  taskTypeId: string;
+  taskTypeId?: string;
 
   @IsUUID('4', { message: 'statusId khong hop le' })
   @IsNotEmpty({ message: 'statusId khong duoc de trong' })
   statusId: string;
 
+  @IsOptional()
   @IsUUID('4', { message: 'priorityId khong hop le' })
-  @IsNotEmpty({ message: 'priorityId khong duoc de trong' })
-  priorityId: string;
+  priorityId?: string;
 
   @IsOptional()
   @IsUUID('4', { message: 'assigneeUserId khong hop le' })

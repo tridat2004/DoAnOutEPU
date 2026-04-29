@@ -22,6 +22,10 @@ import { TaskCommentsController } from './task-comments.controller';
 import { TaskHistoriesController } from './task-histories.controller';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { ActivityModule } from '../activity/activity.module';
+import { TaskCommentAttachment } from './entities/task-comment-attachment.entity';
+import { TaskCommentReaction } from './entities/task-comment-reaction.entity';
+import { TaskAttachmentsController } from './task-attachments.controller';
+import { TaskAttachmentsService } from './task-attachments.service';
 
 @Module({
   imports: [
@@ -37,6 +41,8 @@ import { ActivityModule } from '../activity/activity.module';
       Project,
       ProjectMember,
       User,
+      TaskCommentAttachment,
+      TaskCommentReaction
     ]),
   ],
   controllers: [
@@ -44,17 +50,20 @@ import { ActivityModule } from '../activity/activity.module';
     TaskMetaController,
     TaskCommentsController,
     TaskHistoriesController,
+    TaskAttachmentsController
   ],
   providers: [
     TasksService,
     TaskCommentsService,
     TaskHistoriesService,
+    TaskAttachmentsService
   ],
   exports: [
     TasksService,
     TaskCommentsService,
     TaskHistoriesService,
     TypeOrmModule,
+    TaskAttachmentsService,
   ],
 })
 export class TasksModule {}

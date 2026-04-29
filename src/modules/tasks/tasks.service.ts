@@ -97,27 +97,46 @@ export class TasksService {
     if (!reporter) throw AppErrors.auth.userNotFound();
     if (!reporter.isActive) throw AppErrors.auth.accountDisabled();
 
-    const taskType = await this.taskTypeRepository.findOne({
-      where: { id: dto.taskTypeId },
-    })
-    if (!taskType) throw AppErrors.task.taskTypeNotFound();
+    const taskType = dto.taskTypeId
+      ? await this.taskTypeRepository.findOne({
+        where: { id: dto.taskTypeId },
+      })
+      : await this.taskTypeRepository.findOne({
+        where: { code: 'task' },
+      });
+
+    if (!taskType) {
+      throw AppErrors.task.taskTypeNotFound();
+    }
 
     const status = await this.taskStatusRepository.findOne({
       where: { id: dto.statusId },
-    })
+    });
     if (!status) throw AppErrors.task.taskStatusNotFound();
 
-    const priority = await this.priorityRepository.findOne({
-      where: { id: dto.priorityId },
-    });
-    if (!priority) throw AppErrors.task.priorityNotFound();
+    const priority = dto.priorityId
+      ? await this.priorityRepository.findOne({
+        where: { id: dto.priorityId },
+      })
+      : await this.priorityRepository.findOne({
+        where: { code: 'medium' },
+      });
+
+    if (!priority) {
+      throw AppErrors.task.priorityNotFound();
+    }
 
     const assignee = dto.assigneeUserId ? await this.resolveAssignee(projectId, dto.assigneeUserId) : null;
     const parentTask = dto.parentTaskId ? await this.resolveParentTask(projectId, dto.parentTaskId) : null;
 
     try {
       const savedTask = await this.dataSource.transaction(async (manager) => {
-        const taskCode = await this.generateNextTaskCode(project.projectKey, project.id, manager)
+        const taskCode = await this.generateNextTaskCode(
+          project.projectKey,
+          project.id,
+          manager,
+        );
+
         const task = manager.create(Task, {
           project,
           taskCode,
@@ -132,30 +151,23 @@ export class TasksService {
           dueDate: dto.dueDate || undefined,
           estimatedHours: dto.estimatedHours,
         });
-        const savedTask = await manager.save(Task, task);
-        if (assignee) {
-          await this.notificationsService.notifyTaskAssigned(
-            assignee.id,
-            savedTask.taskCode,
-            savedTask.id,
-            project.id,
-          );
-        }
-        await this.activityService.log({
-          actor: reporter,
-          project,
-          actionType: ActivityAction.TASK_CREATED,
-          targetType: ActivityTargetType.TASK,
-          targetId: savedTask.id,
-          message: `${reporter.fullName} da tao task ${savedTask.taskCode} - ${savedTask.title}`,
-          metadata: {
-            taskId: savedTask.id,
-            taskCode: savedTask.taskCode,
-            title: savedTask.title,
-          },
-        });
-        return savedTask
-      })
+
+        return await manager.save(Task, task);
+      });
+
+      await this.activityService.log({
+        actor: reporter,
+        project,
+        actionType: ActivityAction.TASK_CREATED,
+        targetType: ActivityTargetType.TASK,
+        targetId: savedTask.id,
+        message: `${reporter.fullName} da tao task ${savedTask.taskCode} - ${savedTask.title}`,
+        metadata: {
+          taskId: savedTask.id,
+          taskCode: savedTask.taskCode,
+          title: savedTask.title,
+        },
+      });
       return successResponse({
         message: 'Tao task thanh cong',
         data: await this.taskRepository.findOne({
